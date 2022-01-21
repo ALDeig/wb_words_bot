@@ -1,0 +1,8 @@
+aiogram
+aioredis
+environs
+SQLAlchemy
+asyncpg
+alembic
+loguru
+psycopg2

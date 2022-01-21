@@ -1,0 +1,15 @@
+[Unit]
+Description=
+After=network.target
+
+[Service]
+User=
+Group=
+Type=simple
+WorkingDirectory=/home/$USERNAME/code/...
+ExecStart=/home/$USERNAME/code/.../venv/bin/python bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
