@@ -10,16 +10,10 @@ from aiogram.utils.exceptions import ChatNotFound
 from tgbot.config import load_config
 from tgbot.filters.admin import AdminFilter, SubscribeFilter
 from tgbot.handlers.admin import register_admin
-from tgbot.handlers.echo import register_echo
 from tgbot.handlers.user import register_user
-# from tgbot.middlewares.db import DbMiddleware
-# from tgbot.services.database import create_db_session
 from tgbot.services.db_connection import get_session
 from tgbot.services.logger import setup_logger
-
-
-# def register_all_middlewares(dp):
-#     dp.setup_middleware(DbMiddleware())
+from tgbot.services.scheduler import add_new_job
 
 
 def register_all_filters(dp):
@@ -30,8 +24,6 @@ def register_all_filters(dp):
 def register_all_handlers(dp):
     register_user(dp)
     register_admin(dp)
-
-    # register_echo(dp)
 
 
 async def set_commands(dp: Dispatcher):
@@ -76,17 +68,19 @@ async def main():
     dp = Dispatcher(bot, storage=storage)
 
     bot['config'] = config
-    bot['db'] = await get_session()
+    bot['db'] = session = await get_session()
     bot_info = await bot.get_me()
     logging.info(f'<yellow>Name: <b>{bot_info["first_name"]}</b>, username: {bot_info["username"]}</yellow>')
 
-    # register_all_middlewares(dp)
     register_all_filters(dp)
     register_all_handlers(dp)
     await set_commands(dp)
 
+    scheduler = add_new_job(session)
+
     # start
     try:
+        scheduler.start()
         await dp.start_polling()
     finally:
         await dp.storage.close()
