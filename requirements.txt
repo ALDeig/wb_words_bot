@@ -5,4 +5,10 @@ SQLAlchemy
 asyncpg
 alembic
 loguru
-psycopg2
+lxml
+httpx
+BeautifulSoup4
+XlsxWriter
+fake-useragent
+APSCheduler
+# psycopg2

@@ -8,38 +8,49 @@ from aiogram.types import BotCommand, BotCommandScopeChat
 from aiogram.utils.exceptions import ChatNotFound
 
 from tgbot.config import load_config
-from tgbot.filters.admin import AdminFilter
+from tgbot.filters.admin import AdminFilter, SubscribeFilter
 from tgbot.handlers.admin import register_admin
 from tgbot.handlers.echo import register_echo
 from tgbot.handlers.user import register_user
-from tgbot.middlewares.db import DbMiddleware
-from tgbot.services.database import create_db_session
+# from tgbot.middlewares.db import DbMiddleware
+# from tgbot.services.database import create_db_session
+from tgbot.services.db_connection import get_session
 from tgbot.services.logger import setup_logger
 
 
-def register_all_middlewares(dp):
-    dp.setup_middleware(DbMiddleware())
+# def register_all_middlewares(dp):
+#     dp.setup_middleware(DbMiddleware())
 
 
 def register_all_filters(dp):
     dp.filters_factory.bind(AdminFilter)
+    dp.filters_factory.bind(SubscribeFilter)
 
 
 def register_all_handlers(dp):
-    register_admin(dp)
     register_user(dp)
+    register_admin(dp)
 
-    register_echo(dp)
+    # register_echo(dp)
 
 
 async def set_commands(dp: Dispatcher):
     config = dp.bot.get('config')
     admin_ids = config.tg_bot.admin_ids
     await dp.bot.set_my_commands(
-        commands=[BotCommand('start', 'Старт')]
+        commands=[
+            BotCommand('start', 'Старт'),
+            BotCommand("help", "Руководство пользователя"),
+        ]
     )
     commands_for_admin = [
-        BotCommand('start', 'Старт'),
+        BotCommand("start", "Старт"),
+        BotCommand("help", "Руководство пользователя"),
+        BotCommand("add_user", "Добавить пользователя бота"),
+        BotCommand("authorization", "Авторизация в MPStats"),
+        BotCommand("sending", "Рассылка сообщения пользователям"),
+        BotCommand("count", "Количество пользователей"),
+        BotCommand("delete_user", "Удалить пользователя")
     ]
     for admin_id in admin_ids:
         try:
@@ -65,11 +76,11 @@ async def main():
     dp = Dispatcher(bot, storage=storage)
 
     bot['config'] = config
-    bot['db'] = await create_db_session(config)
+    bot['db'] = await get_session()
     bot_info = await bot.get_me()
     logging.info(f'<yellow>Name: <b>{bot_info["first_name"]}</b>, username: {bot_info["username"]}</yellow>')
 
-    register_all_middlewares(dp)
+    # register_all_middlewares(dp)
     register_all_filters(dp)
     register_all_handlers(dp)
     await set_commands(dp)
