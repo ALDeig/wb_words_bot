@@ -34,8 +34,10 @@ class QueryDB:
         return user.scalar()
 
     async def delete_users_with_subscribe_over(self):
+        users_without_subscribe = await self.session.execute(sa.select(User).where(User.subscribe < date.today()))
         await self.session.execute(sa.delete(User).where(User.subscribe < date.today()))
         await self.session.commit()
+        return users_without_subscribe.scalars().all()
 
     async def delete_user(self, telegram_id):
         result = await self.session.execute(

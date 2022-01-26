@@ -76,7 +76,7 @@ async def main():
     register_all_handlers(dp)
     await set_commands(dp)
 
-    scheduler = add_new_job(session)
+    scheduler = add_new_job(session, bot)
 
     # start
     try:
