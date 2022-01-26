@@ -16,8 +16,22 @@ async def user_start(msg: Message, state: FSMContext):
     user = await QueryDB(msg.bot.get("db")).get_user(msg.from_user.id)
     if not user:
         await msg.answer(texts.TEXTS["start"])
+        await msg.answer("Оформить подписку", reply_markup=inline.subscribe())
         return
     await msg.answer("Выбери команду", reply_markup=inline.start_menu())
+
+
+async def btn_subscribe(call: CallbackQuery, state: FSMContext):
+    await call.answer()
+    period = "день" if call.data == "day" else "месяц"
+    await call.message.answer(f"Вы выбрали 1 {period} подписки")
+    await call.message.answer(texts.TEXTS["subscribe"], reply_markup=inline.paid())
+
+
+async def paid(call: CallbackQuery, state: FSMContext):
+    await call.answer()
+    await call.message.edit_reply_markup()
+    await call.message.answer(texts.TEXTS["paid"])
 
 
 async def btn_get_suggest(call: CallbackQuery, state: FSMContext):
@@ -68,11 +82,16 @@ async def send_excel_file(msg: Message, state: FSMContext):
 async def send_help(msg: Message, state: FSMContext):
     await state.finish()
     await msg.answer(texts.TEXTS["help"])
-    await msg.answer("Выбери команду", reply_markup=inline.start_menu())
+    file = InputFile("help.mp4")
+    msg = await msg.answer_document(file)
+    print(msg)
+    # await msg.answer("Выбери команду", reply_markup=inline.start_menu())
 
 
 def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, commands=["start"], state="*")
+    dp.register_callback_query_handler(btn_subscribe, lambda call: call.data == "day" or call.data == "month")
+    dp.register_callback_query_handler(paid, lambda call: call.data == "paid")
     dp.register_callback_query_handler(btn_get_suggest, lambda call: call.data == "suggest", is_subscribe=True)
     dp.register_message_handler(send_suggest_query, state="query_for_suggest")
     dp.register_callback_query_handler(btn_excel_file, lambda call: call.data == "excel", is_subscribe=True)
