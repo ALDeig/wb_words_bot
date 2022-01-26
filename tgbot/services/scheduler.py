@@ -17,5 +17,5 @@ async def check_subscribe_users(session: AsyncSession, bot: Bot):
 
 
 def add_new_job(session, bot):
-    scheduler.add_job(check_subscribe_users, "cron", hour=1, args=[session, bot])
+    scheduler.add_job(check_subscribe_users, "cron", hour=1, minute=0, args=[session, bot])
     return scheduler
