@@ -67,7 +67,7 @@ async def get_popular_product_for_query(client: httpx.AsyncClient, query: str) -
     response = await client.get(
         url="https://mpstats.io/wb/bysearch",
         headers=headers,
-        params={"query": query},
+        params={"query": query + " "},
         timeout=120
     )
     return parser.get_popular_product(response.text)
@@ -83,6 +83,7 @@ async def main(queries: str, login, password) -> list | None:
     suggest_queries = get_list_queries(queries)
     async with httpx.AsyncClient(headers=HEADERS) as client:
         authorize = await authorization(client, login, password)
+        print(authorize)
         if not authorize:
             return
         all_popular_product = []
