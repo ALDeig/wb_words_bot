@@ -118,7 +118,7 @@ async def main(queries: str, login, password) -> list | None:
         return response["result"]
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # data = asyncio.run(main("Джинсы"))
     # with httpx.Client() as client:
     #     # a = authorization(client, "kolpackir@yandex.ru", "potok522222")
