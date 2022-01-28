@@ -91,7 +91,7 @@ def get_list_queries(queries: str):
 
 async def main(queries: str, login, password) -> list | None:
     suggest_queries = get_list_queries(queries)
-    HEADERS["user-agent"] = useragent.rendom
+    HEADERS["user-agent"] = useragent.random
     async with httpx.AsyncClient(headers=HEADERS) as client:
         authorize = await authorization(client, login, password)
         if not authorize:
