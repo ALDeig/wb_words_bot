@@ -5,7 +5,7 @@ import httpx
 from fake_useragent import UserAgent
 
 # from . import parser
-from . import wildberries
+# from . import wildberries
 
 HEADERS = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -14,6 +14,9 @@ HEADERS = {
     "content_lenght": "73",
     "content-type": "application/x-www-form-urlencoded",
     "dnt": "1",
+    "origin": "https://mpstats.io",
+    "pragma": "no-cache",
+    "referer": "https://mpstats.io/login",
     # "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0"
 }
@@ -115,8 +118,26 @@ async def main(queries: str, login, password) -> list | None:
         return response["result"]
 
 
-# if __name__ == "__main__":
-#     data = asyncio.run(main("Джинсы"))
+if __name__ == "__main__":
+    # data = asyncio.run(main("Джинсы"))
+    # with httpx.Client() as client:
+    #     # a = authorization(client, "kolpackir@yandex.ru", "potok522222")
+    #     headers = {
+    #         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    #         "accept-encoding": "gzip, deflate, br",
+    #         "accept-language": "ru-RU,ru;q=0.9,en-GB;q=0.8,en-US;q=0.7,en;q=0.6",
+    #         "cache-control": "no-cache",
+    #         "dnt": "1",
+    #         "pragma": "no-cache",
+    #         "referer": "https://mpstats.io/",
+    #         "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
+    #     }
+    #     r = client.post(
+    #         url="https://mpstats.io/login",
+    #         headers=headers,
+    #         data={"act": "login", "email": "kolpackir@yandex.ru", "password": "potok522222"}
+    #     )
+    #     print(r.text)
 #     print(data)
     # if data:
     #     print("OK")
