@@ -1,8 +1,9 @@
 import asyncio
+import logging
 
 import httpx
 
-from . import parser
+# from . import parser
 from . import wildberries
 
 HEADERS = {
@@ -89,13 +90,17 @@ async def main(queries: str, login, password) -> list | None:
         if not authorize:
             return
         all_popular_product = []
+        logging.info(f"Amount queries - {len(suggest_queries)}")
         for query in suggest_queries:
             # popular_product = await get_popular_product_for_query(client, query)
             popular_product = await wildberries.get_search_data(query.strip().lower())
             if not popular_product:
-                return
+                continue
             all_popular_product.extend(popular_product)
             await asyncio.sleep(3)
+        logging.info(f"Amount popular products - {len(all_popular_product)}")
+        if not all_popular_product:
+            return
         response = await get_response_from_mpstats(client, "\n".join(set(all_popular_product)))
         return response["result"]
 
