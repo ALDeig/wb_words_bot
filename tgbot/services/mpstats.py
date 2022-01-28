@@ -14,15 +14,16 @@ HEADERS = {
     "content_lenght": "73",
     "content-type": "application/x-www-form-urlencoded",
     "dnt": "1",
-    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
+    # "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
+    "user-agent": "	Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0"
 }
 
 useragent = UserAgent()
 
 
-async def authorization(client: httpx.AsyncClient, login: str, password: str) -> bool:
+def authorization(client: httpx.Client, login: str, password: str) -> bool:
     """Авторизация на сайте mpstats.io"""
-    authorize = await client.post(
+    authorize = client.post(
         url="https://mpstats.io/login",
         data={"act": "login", "email": login, "password": password},
         timeout=60
@@ -35,7 +36,7 @@ async def authorization(client: httpx.AsyncClient, login: str, password: str) ->
     return True
 
 
-async def get_response_from_mpstats(client: httpx.AsyncClient, ids_product: str) -> dict | None:
+def get_response_from_mpstats(client: httpx.Client, ids_product: str) -> dict | None:
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-encoding": "gzip, deflate, br",
@@ -45,7 +46,7 @@ async def get_response_from_mpstats(client: httpx.AsyncClient, ids_product: str)
         "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 \
                        Safari/537.36"
     }
-    request = await client.post(
+    request = client.post(
         url="https://mpstats.io/api/seo/keywords/expanding",
         headers=headers,
         json={
@@ -91,9 +92,9 @@ def get_list_queries(queries: str):
 
 async def main(queries: str, login, password) -> list | None:
     suggest_queries = get_list_queries(queries)
-    HEADERS["user-agent"] = useragent.random
-    async with httpx.AsyncClient(headers=HEADERS) as client:
-        authorize = await authorization(client, login, password)
+    # HEADERS["user-agent"] = useragent.random
+    with httpx.Client(headers=HEADERS) as client:
+        authorize = authorization(client, login, password)
         if not authorize:
             return
         all_popular_product = []
@@ -108,7 +109,9 @@ async def main(queries: str, login, password) -> list | None:
         logging.info(f"Amount popular products - {len(all_popular_product)}")
         if not all_popular_product:
             return
-        response = await get_response_from_mpstats(client, "\n".join(set(all_popular_product)))
+        response = get_response_from_mpstats(client, "\n".join(set(all_popular_product)))
+        if not response:
+            return
         return response["result"]
 
 
