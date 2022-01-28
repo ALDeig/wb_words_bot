@@ -1,6 +1,7 @@
 import httpx
 
 from . import parser
+from . import wildberries
 
 HEADERS = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -52,25 +53,25 @@ async def get_response_from_mpstats(client: httpx.AsyncClient, ids_product: str)
     return request.json()
 
 
-async def get_popular_product_for_query(client: httpx.AsyncClient, query: str) -> list | None:
-    headers = {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,\
-        application/signed-exchange;v=b3;q=0.9",
-        "accept-encoding": "gzip, deflate, br",
-        "accept-language": "ru-RU,ru;q=0.9,en-GB;q=0.8,en-US;q=0.7,en;q=0.6",
-        "cache-control": "no-cache",
-        # "content-length": "1672",
-        "content-type": "application/json",
-        "dnt": "1",
-        "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
-    }
-    response = await client.get(
-        url="https://mpstats.io/wb/bysearch",
-        headers=headers,
-        params={"query": query + " "},
-        timeout=120
-    )
-    return parser.get_popular_product(response.text)
+# async def get_popular_product_for_query(client: httpx.AsyncClient, query: str) -> list | None:
+#     headers = {
+#         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,\
+#         application/signed-exchange;v=b3;q=0.9",
+#         "accept-encoding": "gzip, deflate, br",
+#         "accept-language": "ru-RU,ru;q=0.9,en-GB;q=0.8,en-US;q=0.7,en;q=0.6",
+#         "cache-control": "no-cache",
+#         # "content-length": "1672",
+#         "content-type": "application/json",
+#         "dnt": "1",
+#         "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
+#     }
+#     response = await client.get(
+#         url="https://mpstats.io/wb/bysearch",
+#         headers=headers,
+#         params={"query": query + " "},
+#         timeout=120
+#     )
+#     return parser.get_popular_product(response.text)
 
 
 def get_list_queries(queries: str):
@@ -83,16 +84,16 @@ async def main(queries: str, login, password) -> list | None:
     suggest_queries = get_list_queries(queries)
     async with httpx.AsyncClient(headers=HEADERS) as client:
         authorize = await authorization(client, login, password)
-        print(authorize)
         if not authorize:
             return
         all_popular_product = []
         for query in suggest_queries:
-            popular_product = await get_popular_product_for_query(client, query)
+            # popular_product = await get_popular_product_for_query(client, query)
+            popular_product = await wildberries.get_search_data(query.strip().lower())
             if not popular_product:
                 return
             all_popular_product.extend(popular_product)
-        response = await get_response_from_mpstats(client, ",".join(set(all_popular_product)))
+        response = await get_response_from_mpstats(client, "\n".join(set(all_popular_product)))
         return response["result"]
 
 
