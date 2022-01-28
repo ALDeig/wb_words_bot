@@ -79,7 +79,7 @@ async def get_search_data(query) -> list | None:
             params=params
         )
     try:
-        products = [product["id"] for product in result.json()["data"]["products"][:20]]
+        products = [str(product["id"]) for product in result.json()["data"]["products"][:20]]
     except Exception as er:
         logging.error(er)
         return
