@@ -25,6 +25,7 @@ async def authorization(client: httpx.AsyncClient, login: str, password: str) ->
         timeout=60
     )
     if authorize.text:
+        logging.error(f"Ошибка авторизации. Статус код авторизации - {authorize.status_code}")
         return False
     return True
 
