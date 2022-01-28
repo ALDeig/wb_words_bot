@@ -1,3 +1,5 @@
+import asyncio
+
 import httpx
 
 from . import parser
@@ -93,6 +95,7 @@ async def main(queries: str, login, password) -> list | None:
             if not popular_product:
                 return
             all_popular_product.extend(popular_product)
+            await asyncio.sleep(3)
         response = await get_response_from_mpstats(client, "\n".join(set(all_popular_product)))
         return response["result"]
 
