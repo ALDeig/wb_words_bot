@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 import httpx
+from fake_useragent import UserAgent
 
 # from . import parser
 from . import wildberries
@@ -15,6 +16,8 @@ HEADERS = {
     "dnt": "1",
     "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
 }
+
+useragent = UserAgent()
 
 
 async def authorization(client: httpx.AsyncClient, login: str, password: str) -> bool:
@@ -88,6 +91,7 @@ def get_list_queries(queries: str):
 
 async def main(queries: str, login, password) -> list | None:
     suggest_queries = get_list_queries(queries)
+    HEADERS["user-agent"] = useragent.rendom
     async with httpx.AsyncClient(headers=HEADERS) as client:
         authorize = await authorization(client, login, password)
         if not authorize:
