@@ -26,6 +26,8 @@ async def authorization(client: httpx.AsyncClient, login: str, password: str) ->
     )
     if authorize.text:
         logging.error(f"Ошибка авторизации. Статус код авторизации - {authorize.status_code}")
+        with open("auth.html", "w") as file:
+            file.write(authorize.text)
         return False
     return True
 
