@@ -8,7 +8,8 @@ from fake_useragent import UserAgent
 from . import wildberries
 
 HEADERS = {
-    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,\
+application/signed-exchange;v=b3;q=0.9",
     "accept-encoding": "gzip, deflate, br",
     "accept-language": "ru-RU,ru;q=0.9",
     "content_lenght": "73",
@@ -47,7 +48,7 @@ def get_response_from_mpstats(client: httpx.Client, ids_product: str) -> dict | 
         "content-type": "application/json",
         "dnt": "1",
         "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 \
-                       Safari/537.36"
+Safari/537.36"
     }
     request = client.post(
         url="https://mpstats.io/api/seo/keywords/expanding",
@@ -111,7 +112,8 @@ async def main(queries: str, login, password) -> list | None:
         logging.info(f"Amount queries - {len(suggest_queries)}: products - {len(all_popular_product)}")
         if not all_popular_product:
             return
-        response = get_response_from_mpstats(client, "\n".join(set(all_popular_product)))
+        unique_product = tuple(set(all_popular_product))
+        response = get_response_from_mpstats(client, "\n".join(unique_product[:100]))
         try:
             return response["result"]
         except (TypeError, KeyError):
