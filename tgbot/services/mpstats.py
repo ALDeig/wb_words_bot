@@ -62,6 +62,7 @@ def get_response_from_mpstats(client: httpx.Client, ids_product: str) -> dict | 
         timeout=60
     )
     if str(request.status_code).startswith("4"):
+        logging.error(request.text)
         return
     return request.json()
 
@@ -95,13 +96,11 @@ def get_list_queries(queries: str):
 
 async def main(queries: str, login, password) -> list | None:
     suggest_queries = get_list_queries(queries)
-    # HEADERS["user-agent"] = useragent.random
     with httpx.Client(headers=HEADERS) as client:
         authorize = authorization(client, login, password)
         if not authorize:
             return
         all_popular_product = []
-        logging.info(f"Amount queries - {len(suggest_queries)}")
         for query in suggest_queries:
             # popular_product = await get_popular_product_for_query(client, query)
             popular_product = await wildberries.get_search_data(query.strip().lower())
@@ -109,13 +108,14 @@ async def main(queries: str, login, password) -> list | None:
                 continue
             all_popular_product.extend(popular_product)
             await asyncio.sleep(3)
-        logging.info(f"Amount popular products - {len(all_popular_product)}")
+        logging.info(f"Amount queries - {len(suggest_queries)}: products - {len(all_popular_product)}")
         if not all_popular_product:
             return
         response = get_response_from_mpstats(client, "\n".join(set(all_popular_product)))
-        if not response:
+        try:
+            return response["result"]
+        except (TypeError, KeyError):
             return
-        return response["result"]
 
 
 # if __name__ == "__main__":
