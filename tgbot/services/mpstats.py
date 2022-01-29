@@ -115,6 +115,7 @@ async def main(queries: str, login, password) -> list | None:
         try:
             return response["result"]
         except (TypeError, KeyError):
+            logging.error(f"Ответ MPStats - {response}")
             return
 
 
