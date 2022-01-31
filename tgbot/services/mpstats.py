@@ -50,6 +50,7 @@ def get_response_from_mpstats(client: httpx.Client, ids_product: str) -> dict | 
         "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 \
 Safari/537.36"
     }
+    logging.debug(ids_product)
     request = client.post(
         url="https://mpstats.io/api/seo/keywords/expanding",
         headers=headers,
@@ -65,7 +66,6 @@ Safari/537.36"
     if str(request.status_code).startswith("4"):
         logging.error(f"Ошибка сбора данных из MPStats - {request.text}. Код ошибки - {request.status_code}")
         return
-    logging.info(request.text)
     return request.json()
 
 
@@ -117,7 +117,9 @@ async def main(queries: str, login, password) -> list | None:
         unique_product = tuple(set(all_popular_product))
         response = get_response_from_mpstats(client, ",".join(unique_product[:100]))
         try:
-            return response["result"]
+            if response["result"]:
+                return response["result"]
+            raise KeyError
         except (TypeError, KeyError):
             logging.error(f"Ответ MPStats - {response}")
             return

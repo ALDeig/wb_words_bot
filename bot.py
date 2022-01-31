@@ -55,7 +55,7 @@ async def set_commands(dp: Dispatcher):
 
 
 async def main():
-    setup_logger('INFO')
+    setup_logger('DEBUG')
     logging.info('Starting bot')
     config = load_config('.env')
 
