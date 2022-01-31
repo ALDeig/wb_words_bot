@@ -113,7 +113,7 @@ async def main(queries: str, login, password) -> list | None:
         if not all_popular_product:
             return
         unique_product = tuple(set(all_popular_product))
-        response = get_response_from_mpstats(client, "\n".join(unique_product[:100]))
+        response = get_response_from_mpstats(client, ",".join(unique_product[:100]))
         try:
             return response["result"]
         except (TypeError, KeyError):
