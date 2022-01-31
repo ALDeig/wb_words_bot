@@ -56,14 +56,14 @@ Safari/537.36"
         json={
             "query": ids_product,
             "type": "sku",
-            "similar": False,
+            "similar": "false",
             "stopWords": [],
-            "searchFullWord": False
+            "searchFullWord": "false"
         },
         timeout=60
     )
     if str(request.status_code).startswith("4"):
-        logging.error(request.text)
+        logging.error(f"Ошибка сбора данных из MPStats - {request.text}. Код ошибки - {request.status_code}")
         return
     return request.json()
 
