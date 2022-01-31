@@ -55,9 +55,9 @@ async def set_commands(dp: Dispatcher):
 
 
 async def main():
-    setup_logger('DEBUG')
-    logging.info('Starting bot')
-    config = load_config('.env')
+    setup_logger("INFO")
+    logging.info("Starting bot")
+    config = load_config(".env")
 
     if config.tg_bot.use_redis:
         storage = RedisStorage()
