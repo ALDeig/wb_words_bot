@@ -65,6 +65,7 @@ Safari/537.36"
     if str(request.status_code).startswith("4"):
         logging.error(f"Ошибка сбора данных из MPStats - {request.text}. Код ошибки - {request.status_code}")
         return
+    logging.info(request.text)
     return request.json()
 
 
@@ -111,6 +112,7 @@ async def main(queries: str, login, password) -> list | None:
             await asyncio.sleep(3)
         logging.info(f"Amount queries - {len(suggest_queries)}: products - {len(all_popular_product)}")
         if not all_popular_product:
+            logging.error("No popular product")
             return
         unique_product = tuple(set(all_popular_product))
         response = get_response_from_mpstats(client, ",".join(unique_product[:100]))
