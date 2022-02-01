@@ -121,7 +121,7 @@ async def main(queries: str, login, password) -> list | None:
                 return response["result"]
             raise KeyError
         except (TypeError, KeyError):
-            logging.error(f"Ответ MPStats - {response}")
+            logging.error("MPStats не смог найти ключевые слова по этому запросу")
             return
 
 
