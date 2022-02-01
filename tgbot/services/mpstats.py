@@ -7,6 +7,7 @@ from fake_useragent import UserAgent
 # from . import parser
 from . import wildberries
 
+
 HEADERS = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,\
 application/signed-exchange;v=b3;q=0.9",
@@ -56,11 +57,11 @@ Safari/537.36"
         headers=headers,
         json={
             "query": queries,
-            "type": "keyword",
-            "similar": "false",
+            "searchFullWord": False,
+            "similar": False,
             "stopWords": [],
-            "searchFullWord": "false"
-        },
+            "type": "keyword",
+    },
         timeout=60
     )
     if str(request.status_code).startswith("4"):
@@ -120,7 +121,7 @@ async def main(queries: str, login, password) -> list | None:
         try:
             if response["result"]:
                 return response["result"]
-            raise KeyError
+            raise TypeError
         except (TypeError, KeyError):
             logging.error("MPStats не смог найти ключевые слова по этому запросу")
             return
