@@ -40,7 +40,7 @@ def authorization(client: httpx.Client, login: str, password: str) -> bool:
     return True
 
 
-def get_response_from_mpstats(client: httpx.Client, ids_product: str) -> dict | None:
+def get_response_from_mpstats(client: httpx.Client, queries: str) -> dict | None:
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-encoding": "gzip, deflate, br",
@@ -50,13 +50,13 @@ def get_response_from_mpstats(client: httpx.Client, ids_product: str) -> dict | 
         "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 \
 Safari/537.36"
     }
-    logging.debug(ids_product)
+    logging.debug(queries)
     request = client.post(
         url="https://mpstats.io/api/seo/keywords/expanding",
         headers=headers,
         json={
-            "query": ids_product,
-            "type": "sku",
+            "query": queries,
+            "type": "keyword",
             "similar": "false",
             "stopWords": [],
             "searchFullWord": "false"
@@ -102,20 +102,21 @@ async def main(queries: str, login, password) -> list | None:
         authorize = authorization(client, login, password)
         if not authorize:
             return
-        all_popular_product = []
-        for query in suggest_queries:
-            # popular_product = await get_popular_product_for_query(client, query)
-            popular_product = await wildberries.get_search_data(query.strip().lower())
-            if not popular_product:
-                continue
-            all_popular_product.extend(popular_product)
-            await asyncio.sleep(3)
-        logging.info(f"Amount queries - {len(suggest_queries)}: products - {len(all_popular_product)}")
-        if not all_popular_product:
-            logging.error("No popular product")
-            return
-        unique_product = tuple(set(all_popular_product))
-        response = get_response_from_mpstats(client, ",".join(unique_product[:100]))
+        # all_popular_product = []
+        # for query in suggest_queries:
+        #     # popular_product = await get_popular_product_for_query(client, query)
+        #     popular_product = await wildberries.get_search_data(query.strip().lower())
+        #     if not popular_product:
+        #         continue
+        #     all_popular_product.extend(popular_product)
+        #     await asyncio.sleep(3)
+        # logging.info(f"Amount queries - {len(suggest_queries)}: products - {len(all_popular_product)}")
+        # if not all_popular_product:
+        #     logging.error("No popular product")
+        #     return
+        # unique_product = tuple(set(all_popular_product))
+        # response = get_response_from_mpstats(client, ",".join(unique_product[:100]))
+        response = get_response_from_mpstats(client, ",".join(suggest_queries))
         try:
             if response["result"]:
                 return response["result"]
