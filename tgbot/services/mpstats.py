@@ -71,7 +71,7 @@ def _request_keywords_by_search_queries_from_mpstats(client: httpx.Client, queri
 def _parse_categories(categories):
     result = ""
     for category in categories["categories"].keys():
-        result += category.strip() + "\n"
+        result += category.strip() + "\n\n"
     return result
 
 

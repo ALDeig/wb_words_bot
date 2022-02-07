@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from pathlib import Path
 
 from aiogram import Dispatcher
@@ -88,7 +89,11 @@ async def send_help(msg: Message, state: FSMContext):
 
 async def btn_info_by_scu(call: CallbackQuery, state: FSMContext):
     await call.answer()
-    await call.message.answer("Введи артикул товара")
+    try:
+        await call.message.edit_text("Введи артикул товара")
+    except Exception as er:
+        logging.error(er)
+        await call.message.answer("Введи артикул товара")
     await state.set_state("get_scu")
 
 
