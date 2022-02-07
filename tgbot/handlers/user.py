@@ -105,7 +105,11 @@ async def get_scu(msg: Message, state: FSMContext):
         return
     await state.finish()
     auth = await QueryDB(msg.bot.get("db")).get_authorization()
-    categories, words, sales = await mpstats.get_info_by_scu(scu, auth.email, auth.password)
+    try:
+        categories, words, sales = await mpstats.get_info_by_scu(scu, auth.email, auth.password)
+    except TypeError:
+        await msg.answer(texts.TEXTS["error"])
+        return
     excel.save_file_with_words_by_scu(f"{scu}_words.xlsx", words)
     excel.save_file_with_sales_by_scu(f"{scu}_sales.xlsx", sales)
     file_words = InputFile(f"{scu}_words.xlsx")
