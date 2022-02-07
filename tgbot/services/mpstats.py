@@ -120,8 +120,9 @@ def _parse_info_by_scu(product_info: dict) -> tuple[list[WORD_ROW], list[SALES_I
 async def get_keywords_by_search_query(queries: str, login, password) -> list | None:
     suggest_queries = _get_list_queries(queries)
     with httpx.Client(headers=HEADERS_AUTH, proxies="http://160.116.216.196:8000") as client:
-        authorize = _authorization(client, login, password)
-        if not authorize:
+        try:
+            _authorization(client, login, password)
+        except ErrorAuthenticationMPStats:
             return
         try:
             response = _request_keywords_by_search_queries_from_mpstats(client, ",".join(suggest_queries))
