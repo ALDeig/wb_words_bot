@@ -100,7 +100,7 @@ async def btn_info_by_scu(call: CallbackQuery, state: FSMContext):
 async def get_scu(msg: Message, state: FSMContext):
     try:
         scu = int(msg.text)
-    except TypeError:
+    except ValueError:
         await msg.answer("Артикул должен быть числом")
         return
     await state.finish()
