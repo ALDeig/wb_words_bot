@@ -14,7 +14,8 @@ async def get_suggest_queries(query) -> list | None:
         "user-agent": user_agent.random
     }
     url = "https://hints.wildberries.ru/api/v1/hint"
-    async with httpx.AsyncClient(proxies="http://160.116.216.196:8000") as client:
+    # async with httpx.AsyncClient(proxies="http://160.116.216.196:8000") as client:
+    async with httpx.AsyncClient() as client:
         res = await client.get(url, headers=headers, params={"query": query})
         try:
             json_res = res.json()

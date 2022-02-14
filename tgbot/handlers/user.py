@@ -66,8 +66,10 @@ async def btn_excel_file(call: CallbackQuery, state: FSMContext):
 async def send_excel_file(msg: Message, state: FSMContext):
     await state.finish()
     await msg.answer("Это займет некоторое время...")
-    auth = await QueryDB(msg.bot.get("db")).get_authorization()
-    data_for_excel = await mpstats.get_keywords_by_search_query(msg.text, auth.email, auth.password)
+    # auth = await QueryDB(msg.bot.get("db")).get_authorization()
+    token = msg.bot.get("api_token")
+    # data_for_excel = mpstats.get_keywords_by_search_query(msg.text, auth.email, auth.password)
+    data_for_excel = mpstats.get_keywords_by_search_query(msg.text, token)
     if not data_for_excel:
         await msg.answer(texts.TEXTS["error"])
         await state.finish()
@@ -104,9 +106,11 @@ async def get_scu(msg: Message, state: FSMContext):
         await msg.answer("Артикул должен быть числом")
         return
     await state.finish()
-    auth = await QueryDB(msg.bot.get("db")).get_authorization()
+    # auth = await QueryDB(msg.bot.get("db")).get_authorization()
+    token = msg.bot.get("api_token")
     try:
-        categories, words, sales = await mpstats.get_info_by_scu(scu, auth.email, auth.password)
+        # categories, words, sales = mpstats.get_info_by_scu(scu, auth.email, auth.password)
+        categories, words, sales = mpstats.get_info_by_scu(scu, token)
     except TypeError:
         await msg.answer(texts.TEXTS["error"])
         return

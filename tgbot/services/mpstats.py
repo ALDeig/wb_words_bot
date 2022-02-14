@@ -6,6 +6,7 @@ import logging
 import httpx
 
 from .errors import ErrorBadRequestMPStats, ErrorAuthenticationMPStats
+# from tgbot.services.errors import ErrorBadRequestMPStats, ErrorAuthenticationMPStats
 
 HEADERS_AUTH = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,\
@@ -24,11 +25,11 @@ application/signed-exchange;v=b3;q=0.9",
 
 HEADERS_JSON = {
     "accept": "application/json, text/plain, */*",
-    "accept-encoding": "gzip, deflate, br",
-    "accept-language": "ru-RU,ru;q=0.9",
+    # "accept-encoding": "gzip, deflate, br",
+    # "accept-language": "ru-RU,ru;q=0.9",
     "content-type": "application/json",
-    "dnt": "1",
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0",
+    # "dnt": "1",
+    # "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0",
     # "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 \
     # Safari/537.36"
 }
@@ -54,7 +55,7 @@ def _authorization(client: httpx.Client, login: str, password: str) -> bool:
 def _request_keywords_by_search_queries_from_mpstats(client: httpx.Client, queries: str) -> dict | None:
     request = client.post(
         url="https://mpstats.io/api/seo/keywords/expanding",
-        headers=HEADERS_JSON,
+        # headers=HEADERS_JSON,
         json={"query": queries, "searchFullWord": False, "similar": False, "stopWords": [], "type": "keyword"},
         timeout=60
     )
@@ -78,7 +79,7 @@ def _parse_categories(categories):
 def _request_categories_by_scu_from_mpstats(client: httpx.Client, scu: int, begin_date: str, end_date: str) -> dict:
     request = client.get(
         url=f"https://mpstats.io/api/wb/get/item/{scu}/by_category",
-        headers=HEADERS_JSON,
+        # headers=HEADERS_JSON,
         params={"d1": begin_date, "d2": end_date},
         timeout=60
     )
@@ -88,7 +89,7 @@ def _request_categories_by_scu_from_mpstats(client: httpx.Client, scu: int, begi
 def _request_info_by_scu(client: httpx.Client, scu: int, begin_date: str, end_date: str):
     request = client.get(
         url=f"https://mpstats.io/api/wb/get/item/{scu}/by_keywords",
-        headers=HEADERS_JSON,
+        # headers=HEADERS_JSON,
         params={"d1": begin_date, "d2": end_date},
         timeout=60
     )
@@ -117,13 +118,20 @@ def _parse_info_by_scu(product_info: dict) -> tuple[list[WORD_ROW], list[SALES_I
     return sorted_words, days
 
 
-async def get_keywords_by_search_query(queries: str, login, password) -> list | None:
+proxies = {
+    "http://": "http://jenya85may:S3s4ZqF@194.116.163.89:59100"
+}
+
+
+def get_keywords_by_search_query(queries: str, token) -> list | None:
+    headers = HEADERS_JSON.copy()
+    headers["X-Mpstats-TOKEN"] = token
     suggest_queries = _get_list_queries(queries)
-    with httpx.Client(headers=HEADERS_AUTH, proxies="http://160.116.216.196:8000") as client:
-        try:
-            _authorization(client, login, password)
-        except ErrorAuthenticationMPStats:
-            return
+    with httpx.Client(headers=headers, proxies=proxies) as client:
+        # try:
+        #     _authorization(client, login, password)
+        # except ErrorAuthenticationMPStats:
+        #     return
         try:
             response = _request_keywords_by_search_queries_from_mpstats(client, ",".join(suggest_queries))
         except ErrorBadRequestMPStats:
@@ -131,12 +139,14 @@ async def get_keywords_by_search_query(queries: str, login, password) -> list | 
         return response
 
 
-async def get_info_by_scu(scu: int, login, password) -> tuple | None:
-    with httpx.Client(headers=HEADERS_AUTH, proxies="http://160.116.216.196:8000") as client:
-        try:
-            _authorization(client, login, password)
-        except ErrorAuthenticationMPStats:
-            return
+def get_info_by_scu(scu: int, token: str) -> tuple | None:
+    headers = HEADERS_JSON.copy()
+    headers["X-Mpstats-TOKEN"] = token
+    with httpx.Client(headers=headers, proxies=proxies) as client:
+        # try:
+        #     _authorization(client, login, password)
+        # except ErrorAuthenticationMPStats:
+        #     return
         begin_date = (date.today() - timedelta(days=30)).strftime("%Y-%m-%d")
         end_date = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
         raw_categories = _request_categories_by_scu_from_mpstats(client, scu, begin_date, end_date)
@@ -149,5 +159,6 @@ async def get_info_by_scu(scu: int, login, password) -> tuple | None:
         return categories, words, sales
 
 
-
-# asyncio.run(get_info_by_scu(124231, "kolpackir@yandex.ru", "potok522222"))
+# with httpx.Client(headers=HEADERS_JSON, proxies=proxies) as client:
+#     response = _request_keywords_by_search_queries_from_mpstats(client, "кружка,кружка чайная")
+#     print(response)

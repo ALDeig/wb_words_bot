@@ -69,6 +69,7 @@ async def main():
 
     bot['config'] = config
     bot['db'] = session = await get_session()
+    bot["api_token"] = config.misc.token
     bot_info = await bot.get_me()
     logging.info(f'<yellow>Name: <b>{bot_info["first_name"]}</b>, username: {bot_info["username"]}</yellow>')
 
