@@ -39,7 +39,8 @@ async def set_commands(dp: Dispatcher):
         BotCommand("start", "Старт"),
         BotCommand("help", "Руководство пользователя"),
         BotCommand("add_user", "Добавить пользователя бота"),
-        BotCommand("authorization", "Авторизация в MPStats"),
+        BotCommand("update_token", "Обновить токен для MPStats"),
+        BotCommand("update_proxy", "Обновить прокси"),
         BotCommand("sending", "Рассылка сообщения пользователям"),
         BotCommand("count", "Количество пользователей"),
         BotCommand("delete_user", "Удалить пользователя")
@@ -69,7 +70,6 @@ async def main():
 
     bot['config'] = config
     bot['db'] = session = await get_session()
-    bot["api_token"] = config.misc.token
     bot_info = await bot.get_me()
     logging.info(f'<yellow>Name: <b>{bot_info["first_name"]}</b>, username: {bot_info["username"]}</yellow>')
 

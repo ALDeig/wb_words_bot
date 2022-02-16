@@ -4,7 +4,7 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
-from ..models.models import User, Authorization
+from ..models.models import User, Authorization, Proxy
 from .db_connection import get_session
 
 
@@ -49,13 +49,20 @@ class QueryDB:
             return True
         return False
 
-    async def get_authorization(self) -> Authorization:
-        auth = await self.session.execute(sa.select(Authorization).limit(1))
-        return auth.scalar()
+    async def get_authorization(self) -> tuple[Authorization, Proxy]:
+        token = await self.session.execute(sa.select(Authorization).limit(1))
+        proxy = await self.session.execute(sa.select(Proxy).limit(1))
+        return token.scalar(), proxy.scalar()
 
-    async def update_authorization(self, email: str, password: str):
+    async def update_token(self, token: str):
         await self.session.execute(sa.delete(Authorization))
-        new_authorization = Authorization(email=email, password=password)
+        new_authorization = Authorization(token=token)
         self.session.add(new_authorization)
         await self.session.commit()
         return new_authorization
+
+    async def update_proxy(self, username: str, password: str, ip_address: str, port: str):
+        await self.session.execute(sa.delete(Proxy))
+        new_proxy = Proxy(username=username, password=password, ip_address=ip_address, port=port)
+        self.session.add(new_proxy)
+        await self.session.commit()

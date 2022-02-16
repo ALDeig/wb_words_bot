@@ -6,8 +6,7 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery, InputFile
 
-# from tgbot.models.users import User
-from ..keyboards import inline, reply
+from ..keyboards import inline
 from ..services import wildberries, mpstats, excel, texts
 from ..services.db_queries import QueryDB
 
@@ -66,10 +65,8 @@ async def btn_excel_file(call: CallbackQuery, state: FSMContext):
 async def send_excel_file(msg: Message, state: FSMContext):
     await state.finish()
     await msg.answer("Это займет некоторое время...")
-    # auth = await QueryDB(msg.bot.get("db")).get_authorization()
-    token = msg.bot.get("api_token")
-    # data_for_excel = mpstats.get_keywords_by_search_query(msg.text, auth.email, auth.password)
-    data_for_excel = mpstats.get_keywords_by_search_query(msg.text, token)
+    auth, proxy = await QueryDB(msg.bot.get("db")).get_authorization()
+    data_for_excel = mpstats.get_keywords_by_search_query(msg.text, auth.token, proxy)
     if not data_for_excel:
         await msg.answer(texts.TEXTS["error"])
         await state.finish()
@@ -106,11 +103,9 @@ async def get_scu(msg: Message, state: FSMContext):
         await msg.answer("Артикул должен быть числом")
         return
     await state.finish()
-    # auth = await QueryDB(msg.bot.get("db")).get_authorization()
-    token = msg.bot.get("api_token")
+    auth, proxy = await QueryDB(msg.bot.get("db")).get_authorization()
     try:
-        # categories, words, sales = mpstats.get_info_by_scu(scu, auth.email, auth.password)
-        categories, words, sales = mpstats.get_info_by_scu(scu, token)
+        categories, words, sales = mpstats.get_info_by_scu(scu, auth.token, proxy)
     except TypeError:
         await msg.answer(texts.TEXTS["error"])
         return
