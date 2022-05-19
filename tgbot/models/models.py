@@ -7,6 +7,7 @@ class User(Base):
     __tablename__ = "telegram_users"
     telegram_id = sa.Column(sa.BigInteger, primary_key=True, index=True)
     subscribe = sa.Column(sa.Date(), nullable=True)
+    wb_api_key = sa.Column(sa.String(), nullable=True)
 
 
 class Authorization(Base):

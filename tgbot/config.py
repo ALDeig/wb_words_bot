@@ -20,8 +20,9 @@ class TgBot:
 
 @dataclass
 class Miscellaneous:
-    other_params: str = None
-    token: str = None
+    # other_params: str = None
+    # token: str = None
+    wb_api_salt: str = None
 
 
 @dataclass
@@ -47,5 +48,7 @@ def load_config(path: str = None):
             user=env.str('DB_USER'),
             database=env.str('DB_NAME')
         ),
-        misc=Miscellaneous()
+        misc=Miscellaneous(
+            # wb_api_salt=env.str("WB_API_SALT")
+        )
     )

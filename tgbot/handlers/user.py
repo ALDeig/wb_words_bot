@@ -9,6 +9,7 @@ from aiogram.types import Message, CallbackQuery, InputFile
 from ..keyboards import inline
 from ..services import wildberries, mpstats, excel, texts
 from ..services.db_queries import QueryDB
+from ..services.errors import WBAuthorizedError, WBUpdateNameError
 
 
 async def user_start(msg: Message, state: FSMContext):
@@ -122,6 +123,55 @@ async def get_scu(msg: Message, state: FSMContext):
     await msg.answer("Выбери команду", reply_markup=inline.start_menu())
 
 
+async def btn_change_name(call: CallbackQuery, state: FSMContext):
+    await call.answer()
+    user = await QueryDB(call.bot.get("db")).get_user(call.from_user.id)
+    if not user.wb_api_key:
+        kb = inline.send_api_key()
+        await call.message.answer("Вам нужно ввести apiKey Wildberries", reply_markup=kb)
+        return
+    await state.update_data(api_key=user.wb_api_key)
+    await call.message.answer("Напишите артикул карточки")
+    await state.set_state("get_scu_for_change_name")
+
+
+async def get_scu_for_change_name(msg: Message, state: FSMContext):
+    if not msg.text.isdigit():
+        await msg.answer("Артикул должен быть числом")
+        return
+    await state.update_data(scu=msg.text)
+    await msg.answer("Введите новое название")
+    await state.set_state("get_new_name")
+
+
+async def get_new_name(msg: Message, state: FSMContext):
+    data = await state.get_data()
+    try:
+        await wildberries.update_name_wb_card(data["api_key"], int(data["scu"]), msg.text)
+    except WBAuthorizedError as er:
+        await msg.answer(f"Ошибка авторизации - {er.message}. Попробуйте изменить токен",
+                         reply_markup=inline.send_api_key())
+    except WBUpdateNameError as er:
+        await msg.answer(f"При изменении имени в карточке возникла ошибка - {er.message}. "
+                         f"Исправьте данные в карточке и повторите")
+    else:
+        await msg.answer("Готово")
+    finally:
+        await state.finish()
+
+
+async def btn_send_api_key(call: CallbackQuery, state: FSMContext):
+    await call.message.answer_video(InputFile("get_token.mp4"))
+    await call.message.answer(texts.TEXTS["get_token"])
+    await state.set_state("get_api_key")
+
+
+async def get_wb_api_key(msg: Message, state: FSMContext):
+    await QueryDB(msg.bot.get("db")).update_wb_api_key(msg.from_user.id, msg.text)
+    await msg.answer("Готово!\nВыберите команду", reply_markup=inline.start_menu())
+    await state.finish()
+
+
 def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, commands=["start"], state="*")
     dp.register_callback_query_handler(btn_subscribe, lambda call: call.data == "day" or call.data == "month")
@@ -133,3 +183,8 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(send_help, commands=["help"])
     dp.register_callback_query_handler(btn_info_by_scu, lambda call: call.data == "info", is_subscribe=True)
     dp.register_message_handler(get_scu, state="get_scu")
+    dp.register_callback_query_handler(btn_change_name, text="change_name")
+    dp.register_message_handler(get_scu_for_change_name, state="get_scu_for_change_name")
+    dp.register_message_handler(get_new_name, state="get_new_name")
+    dp.register_callback_query_handler(btn_send_api_key, text="wb_api_key")
+    dp.register_message_handler(get_wb_api_key, state="get_api_key")

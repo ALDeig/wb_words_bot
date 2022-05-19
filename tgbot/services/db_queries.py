@@ -34,6 +34,10 @@ class QueryDB:
         user = await self.session.execute(sa.select(User).where(User.telegram_id == telegram_id))
         return user.scalar()
 
+    async def update_wb_api_key(self, telegram_id: int, api_key: str):
+        await self.session.execute(sa.update(User).where(User.telegram_id == telegram_id).values(wb_api_key=api_key))
+        await self.session.commit()
+
     async def delete_users_with_subscribe_over(self):
         users_without_subscribe = await self.session.execute(sa.select(User).where(User.subscribe < date.today()))
         await self.session.execute(sa.delete(User).where(User.subscribe < date.today()))

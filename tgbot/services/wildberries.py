@@ -4,7 +4,10 @@ import logging
 import httpx
 from fake_useragent import UserAgent
 
+from tgbot.services.errors import WBAuthorizedError
+
 user_agent = UserAgent()
+WB_MAIN_URL = "https://suppliers-api.wildberries.ru/"
 
 
 async def get_suggest_queries(query) -> list | None:
@@ -88,3 +91,68 @@ async def get_search_data(query) -> list | None:
         logging.error(er)
         return
     return products
+
+
+async def _get_card_list_with_offset(client: httpx.AsyncClient, offset: int):
+    response = await client.post(
+        url=f"{WB_MAIN_URL}card/list",
+        json={
+            "id": 1,
+            "jsonrpc": "2.0",
+            "params": {"query": {"limit": 50, "offset": offset}}
+        }
+    )
+    if response.text in ("invalid token", "unauthorized"):
+        raise WBAuthorizedError(response.text)
+    return response.json()
+
+
+async def _get_card_list(client: httpx.AsyncClient) -> dict:
+    card_list = await _get_card_list_with_offset(client, 0)
+    total_cards = card_list["result"]["cursor"]["total"]
+    if total_cards > 50:
+        for offset in range(50, total_cards, 50):
+            next_card_list =  await _get_card_list_with_offset(client, offset)
+            card_list["result"]["cards"].extend(next_card_list["result"]["cards"])
+    return card_list
+
+
+def _find_card_by_scu(card_list: dict, scu: int) -> dict | None:
+    cnt = 0
+    for card in card_list["result"]["cards"]:
+        cnt += 1
+        for nomenclature in card["nomenclatures"]:
+            if int(nomenclature["nmId"]) == scu:
+                return card
+
+
+def _update_name_in_card(card: dict, new_name: str):
+    for params in card["addin"]:
+        if params["type"] == "Наименование":
+            params["params"][0]["value"] = new_name
+            return card
+
+
+async def _send_changes_to_wb(client: httpx.AsyncClient, card_with_new_name: dict):
+    response = await client.post(
+        url=f"{WB_MAIN_URL}card/update",
+        json={
+            "id": 1,
+            "jsonrpc": "2.0",
+            "params": {"card": card_with_new_name}
+        }
+    )
+    result = response.json()
+    if "error" in result:
+        raise WBUpdateNameError(result["error"]["couse"]["err"])
+
+
+async def update_name_wb_card(api_key: str, scu: int, new_name: str) -> bool:
+    async with httpx.AsyncClient(headers={"Authorization": api_key}) as client:
+        card_list = await _get_card_list(client)
+        card = _find_card_by_scu(card_list, scu)
+        card_with_new_name = _update_name_in_card(card, new_name)
+        await _send_changes_to_wb(client, card_with_new_name)
+        return True
+
+
