@@ -128,7 +128,7 @@ async def btn_change_name(call: CallbackQuery, state: FSMContext):
     user = await QueryDB(call.bot.get("db")).get_user(call.from_user.id)
     if not user.wb_api_key:
         kb = inline.send_api_key()
-        await call.message.answer("Вам нужно ввести apiKey Wildberries", reply_markup=kb)
+        await call.message.answer("Вам нужно ввести новый ключ API Wildberries", reply_markup=kb)
         return
     await state.update_data(api_key=user.wb_api_key)
     await call.message.answer("Напишите артикул карточки")
@@ -149,7 +149,7 @@ async def get_new_name(msg: Message, state: FSMContext):
     try:
         await wildberries.update_name_wb_card(data["api_key"], int(data["scu"]), msg.text)
     except WBAuthorizedError as er:
-        await msg.answer(f"Ошибка авторизации - {er.message}. Попробуйте изменить токен",
+        await msg.answer(f"Ошибка авторизации - {er.message}. Попробуйте изменить ключ API Wildberries",
                          reply_markup=inline.send_api_key())
     except WBUpdateNameError as er:
         await msg.answer(f"При изменении имени в карточке возникла ошибка - {er.message}. "
