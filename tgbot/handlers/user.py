@@ -161,7 +161,11 @@ async def get_new_name(msg: Message, state: FSMContext):
 
 
 async def btn_send_api_key(call: CallbackQuery, state: FSMContext):
-    await call.message.answer_video(InputFile("get_token.mp4"))
+    config = call.bot.get("config")
+    video_id = config.misc.get_token_video_id
+    # video = await call.message.answer_video(InputFile("get_token.mp4"))
+    # print(video)
+    await call.message.answer_video(video_id)
     await call.message.answer(texts.TEXTS["get_token"])
     await state.set_state("get_api_key")
 

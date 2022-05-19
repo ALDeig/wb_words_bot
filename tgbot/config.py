@@ -22,7 +22,7 @@ class TgBot:
 class Miscellaneous:
     # other_params: str = None
     # token: str = None
-    wb_api_salt: str = None
+    get_token_video_id: str = None
 
 
 @dataclass
@@ -49,6 +49,7 @@ def load_config(path: str = None):
             database=env.str('DB_NAME')
         ),
         misc=Miscellaneous(
+            get_token_video_id=env.str("GET_TOKEN_VIDEO_ID")
             # wb_api_salt=env.str("WB_API_SALT")
         )
     )
