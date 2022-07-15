@@ -1,14 +1,15 @@
-aiogram
+aiogram==2.21
 aioredis
-environs
-SQLAlchemy
-asyncpg
-alembic
-loguru
-lxml
-httpx
-BeautifulSoup4
-XlsxWriter
+environs==9.5.0
+SQLAlchemy==1.4.39
+asyncpg==0.26.0
+alembic==1.8.1
+loguru==0.6.0
+lxml==4.9.1
+httpx==0.23.0
+BeautifulSoup4==4.11.1
+XlsxWriter==3.0.3
 fake-useragent
-APSCheduler
+APSCheduler==3.9.1
+pydantic==1.9.1
 # psycopg2

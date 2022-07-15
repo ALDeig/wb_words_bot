@@ -67,12 +67,15 @@ async def send_excel_file(msg: Message, state: FSMContext):
     await state.finish()
     await msg.answer("Это займет некоторое время...")
     auth, proxy = await QueryDB(msg.bot.get("db")).get_authorization()
-    data_for_excel = mpstats.get_keywords_by_search_query(msg.text, auth.token, proxy)
-    if not data_for_excel:
-        await msg.answer(texts.TEXTS["error"])
-        await state.finish()
-        return
-    excel.save_file_with_words_by_search_query(f"{msg.from_user.id}.xlsx", data_for_excel)
+    query_info = mpstats.InfoByQuery(msg.text, auth.token, proxy)
+    await query_info.start_process()
+    # data_for_excel = mpstats.get_keywords_by_search_query(msg.text, auth.token, proxy)
+    # if not data_for_excel:
+    #     await msg.answer(texts.TEXTS["error"])
+    #     await state.finish()
+    #     return
+    # excel.save_file_with_words_by_search_query(f"{msg.from_user.id}.xlsx", data_for_excel)
+    excel.save_file_with_words_by_scu(f"{msg.from_user.id}.xlsx", query_info.result)
     file = InputFile(f"{msg.from_user.id}.xlsx")
     await msg.answer_document(file)
     await asyncio.sleep(10)
@@ -106,20 +109,34 @@ async def get_scu(msg: Message, state: FSMContext):
     await state.finish()
     auth, proxy = await QueryDB(msg.bot.get("db")).get_authorization()
     try:
-        categories, words, sales = mpstats.get_info_by_scu(scu, auth.token, proxy)
-    except TypeError:
+        scu_info = mpstats.InfoByScu(scu, auth.token)
+        await scu_info.get_info_by_scu()
+    except Exception as er:
+        print(er)
         await msg.answer(texts.TEXTS["error"])
         return
-    excel.save_file_with_words_by_scu(f"{scu}_words.xlsx", words)
-    excel.save_file_with_sales_by_scu(f"{scu}_sales.xlsx", sales)
+    excel.save_file_with_words_by_scu(f"{scu}_words.xlsx", scu_info.words)
+    # excel.save_file_with_sales_by_scu(f"{scu}_sales.xlsx", sales)
+    excel.save_file_with_request(f"{scu}_requests.xlsx", scu_info.requests)
     file_words = InputFile(f"{scu}_words.xlsx")
-    file_sales = InputFile(f"{scu}_sales.xlsx")
-    await msg.answer(f"Категории:\n{categories}")
-    await msg.answer_document(file_words)
-    await msg.answer_document(file_sales)
+    file_requests = InputFile(f"{scu}_requests.xlsx")
+    image = InputFile(scu_info.image)
+    # categories = Path(f"{scu}_categories.txt")
+    # categories.write_text(f"Категории:\n{scu_info.categories}")
+    # file_categories = InputFile(categories)
+    caption = f"<b>{scu_info.scu_info.name}</b>\n\n<u>Суммарно за 60 дней продано:</u>\n" \
+              f"{scu_info.scu_info.amount_sales} шт. на {scu_info.scu_info.total_sales} руб.\n" \
+              f"Цена: {scu_info.scu_info.price}"
+    await msg.answer_photo(image, caption=caption)
+    await msg.answer(f"Категории:\n\n{scu_info.categories}")
+    # await msg.answer_document(file_categories)
+    await msg.answer_document(file_words, caption=f"Всего слов - {len(scu_info.words)}")
+    await msg.answer_document(file_requests, caption=f"Всего запросов - {len(scu_info.requests)}")
     await asyncio.sleep(5)
     Path(f"{scu}_words.xlsx").unlink()
-    Path(f"{scu}_sales.xlsx").unlink()
+    Path(f"{scu}_requests.xlsx").unlink()
+    # categories.unlink()
+    scu_info.image.unlink()
     await msg.answer("Выбери команду", reply_markup=inline.start_menu())
 
 
