@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import uuid
 from pathlib import Path
 
 from aiogram import Dispatcher
@@ -9,7 +10,8 @@ from aiogram.types import Message, CallbackQuery, InputFile
 from ..keyboards import inline
 from ..services import wildberries, mpstats, excel, texts
 from ..services.db_queries import QueryDB
-from ..services.errors import WBAuthorizedError, WBUpdateNameError
+from ..services.errors import WBAuthorizedError, WBUpdateNameError, CreatePaymentError
+from ..services.payment import Payment, check_payment_process
 
 
 async def user_start(msg: Message, state: FSMContext):
@@ -24,15 +26,48 @@ async def user_start(msg: Message, state: FSMContext):
 
 async def btn_subscribe(call: CallbackQuery, state: FSMContext):
     await call.answer()
+    config = call.bot.get("config")
     period = "день" if call.data == "day" else "месяц"
-    await call.message.answer(f"Вы выбрали 1 {period} подписки")
-    await call.message.answer(texts.TEXTS["subscribe"], reply_markup=inline.paid())
+    payment = Payment(
+        price=500 if call.data == "day" else 1900,
+        description=f"Один {period} подписки на SEO-бота",
+        order_id=f"{uuid.uuid4()}",
+        period=1 if call.data == "day" else 30,
+        terminal_key=config.misc.terminal_key,
+        terminal_password=config.misc.terminal_password
+    )
+    try:
+        payment_url = await payment.create_payment()
+    except CreatePaymentError:
+        await call.message.answer("Не удалось создать платеж. По пробуйте позже или обратитесь к администратору.")
+        await state.finish()
+        return
+    await call.message.answer(f"Вы выбрали 1 {period} подписки. Для перехода к окну оплаты, нажмите \"Оплатить\"."
+                              f"После оплаты вернитесь в бота и нажмите \"Оплатил\"",
+                              reply_markup=inline.pay(payment_url))
+    await state.update_data(payment=payment)
+    # await call.message.answer(texts.TEXTS["subscribe"], reply_markup=inline.paid(payment_url))
+    # await call.message.answer("После оплаты доступ автоматически откроется")
+    # await check_payment_process(
+    #     user_id=call.from_user.id,
+    #     db=call.bot.get("db"),
+    #     bot=call.bot,
+    #     payment=payment
+    # )
+    await state.set_state("paid")
+    # await state.finish()
 
 
-async def paid(call: CallbackQuery, state: FSMContext):
+async def btn_paid(call: CallbackQuery, state: FSMContext):
     await call.answer()
-    await call.message.edit_reply_markup()
-    await call.message.answer(texts.TEXTS["paid"])
+    data = await state.get_data()
+    payment = data.get("payment")
+    await call.message.edit_text("Оплата проверяется")
+    # await call.message.edit_reply_markup()
+    await check_payment_process(call.from_user.id, call.bot.get("db"), call.bot, payment)
+    await state.finish()
+    # await call.message.edit_reply_markup()
+    # await call.message.answer(texts.TEXTS["paid"])
 
 
 async def btn_get_suggest(call: CallbackQuery, state: FSMContext):
@@ -77,7 +112,7 @@ async def send_excel_file(msg: Message, state: FSMContext):
     # excel.save_file_with_words_by_search_query(f"{msg.from_user.id}.xlsx", data_for_excel)
     excel.save_file_with_words_by_scu(f"{msg.from_user.id}.xlsx", query_info.result)
     file = InputFile(f"{msg.from_user.id}.xlsx")
-    await msg.answer_document(file)
+    await msg.answer_document(file, caption=f"Всего слов - {len(query_info.result)}")
     await asyncio.sleep(10)
     Path(f"{msg.from_user.id}.xlsx").unlink()
     await msg.answer("Выбери команду", reply_markup=inline.start_menu())
@@ -116,10 +151,11 @@ async def get_scu(msg: Message, state: FSMContext):
         await msg.answer(texts.TEXTS["error"])
         return
     excel.save_file_with_words_by_scu(f"{scu}_words.xlsx", scu_info.words)
-    # excel.save_file_with_sales_by_scu(f"{scu}_sales.xlsx", sales)
+    excel.save_file_with_sales_by_scu(f"{scu}_sales.xlsx", scu_info.sales)
     excel.save_file_with_request(f"{scu}_requests.xlsx", scu_info.requests)
     file_words = InputFile(f"{scu}_words.xlsx")
     file_requests = InputFile(f"{scu}_requests.xlsx")
+    file_sales = InputFile(f"{scu}_sales.xlsx")
     image = InputFile(scu_info.image)
     # categories = Path(f"{scu}_categories.txt")
     # categories.write_text(f"Категории:\n{scu_info.categories}")
@@ -132,9 +168,11 @@ async def get_scu(msg: Message, state: FSMContext):
     # await msg.answer_document(file_categories)
     await msg.answer_document(file_words, caption=f"Всего слов - {len(scu_info.words)}")
     await msg.answer_document(file_requests, caption=f"Всего запросов - {len(scu_info.requests)}")
+    await msg.answer_document(file_sales)
     await asyncio.sleep(5)
     Path(f"{scu}_words.xlsx").unlink()
     Path(f"{scu}_requests.xlsx").unlink()
+    Path(f"{scu}_sales.xlsx").unlink()
     # categories.unlink()
     scu_info.image.unlink()
     await msg.answer("Выбери команду", reply_markup=inline.start_menu())
@@ -196,7 +234,7 @@ async def get_wb_api_key(msg: Message, state: FSMContext):
 def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, commands=["start"], state="*")
     dp.register_callback_query_handler(btn_subscribe, lambda call: call.data == "day" or call.data == "month")
-    dp.register_callback_query_handler(paid, lambda call: call.data == "paid")
+    dp.register_callback_query_handler(btn_paid, lambda call: call.data == "paid", state="paid")
     dp.register_callback_query_handler(btn_get_suggest, lambda call: call.data == "suggest", is_subscribe=True)
     dp.register_message_handler(send_suggest_query, state="query_for_suggest")
     dp.register_callback_query_handler(btn_excel_file, lambda call: call.data == "excel", is_subscribe=True)

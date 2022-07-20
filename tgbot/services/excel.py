@@ -1,6 +1,6 @@
 import xlsxwriter
 
-from .mpstats import SALES_IN_DAY, RequestRow, WordRow
+from .mpstats import SalesInDay, RequestRow, WordRow
 
 
 def _create_worksheet(name) -> tuple[xlsxwriter.Workbook, xlsxwriter.Workbook.worksheet_class]:
@@ -62,13 +62,13 @@ def save_file_with_request(name: str, requests: list[RequestRow]):
     workbook.close()
 
 
-# def save_file_with_sales_by_scu(name: str, sales: list[SALES_IN_DAY]):
-#     workbook, worksheet = _create_worksheet(name)
-#     worksheet.write_row(0, 0, ("Дата", "Продажи", "Остаток", "Цена со скидкой"))
-#     row = 1
-#     col = 0
-#     for elem in sales:
-#         row_data = (elem.day, elem.sales, elem.balance, elem.price)
-#         worksheet.write_row(row, col, row_data)
-#         row += 1
-#     workbook.close()
+def save_file_with_sales_by_scu(name: str, sales: list[SalesInDay]):
+    workbook, worksheet = _create_worksheet(name)
+    worksheet.write_row(0, 0, ("Дата", "Продажи", "Остаток", "Цена со скидкой"))
+    row = 1
+    col = 0
+    for elem in sales:
+        row_data = (str(elem.date), elem.sales, elem.balance, elem.price)
+        worksheet.write_row(row, col, row_data)
+        row += 1
+    workbook.close()

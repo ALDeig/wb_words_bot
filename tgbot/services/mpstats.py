@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 
 import httpx
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 
 from .errors import ErrorBadRequestMPStats, ErrorAuthenticationMPStats
 # from tgbot.services.errors import ErrorBadRequestMPStats, ErrorAuthenticationMPStats
@@ -21,7 +21,7 @@ HEADERS_JSON = {
 }
 WordRow = namedtuple("WordRow", "word, word_forms, count, total")
 RequestRow = namedtuple("RequestRow", "request, count")
-SALES_IN_DAY = namedtuple("sales", "day, balance, sales, price")
+SalesInDay = namedtuple("SalesInDay", "date, balance, sales, price")
 
 
 @dataclass
@@ -33,6 +33,8 @@ class ScuInfo:
 
 
 class Sales(BaseModel):
+    date_info: date = Field(alias="data")
+    balance: int
     price: int
     discount: int
     final_price: int
@@ -146,6 +148,7 @@ class InfoByScu:
         self.categories: str
         self.words: list[WordRow]
         self.requests: list[RequestRow]
+        self.sales: list[SalesInDay]
         self.scu_info = ScuInfo()
         self._scu = scu
         self._token = token
@@ -184,12 +187,28 @@ class InfoByScu:
             url=f"https://mpstats.io/api/wb/get/item/{self._scu}/sales",
             params={"d1": self._begin_date_for_60_days, "d2": self._end_date}
         )
+        # print(raw_sales_data.text)
+        # with open("sales_info.json", "w") as file:
+        #     json.dump(raw_sales_data.json(), file, indent=4, ensure_ascii=False)
         try:
             sales = [Sales.parse_obj(day) for day in raw_sales_data.json()]
         except (json.JSONDecodeError, ValidationError):
             raise ErrorBadRequestMPStats
         self.scu_info.price, self.scu_info.amount_sales, self.scu_info.total_sales = \
             self._parse_sales_info_by_scu(sales)
+        self.sales = self._parse_info_for_file_with_sales(sales)
+
+    @staticmethod
+    def _parse_info_for_file_with_sales(sales: list[Sales]):
+        result = []
+        for day_info in sales[:10]:
+            result.append(SalesInDay(
+                date=day_info.date_info,
+                balance=day_info.balance,
+                sales=day_info.sales,
+                price=day_info.final_price
+            ))
+        return result
 
     @staticmethod
     def _parse_sales_info_by_scu(sales: list[Sales]) -> tuple[int, int, int]:

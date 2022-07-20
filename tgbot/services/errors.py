@@ -6,6 +6,10 @@ class ErrorAuthenticationMPStats(Exception):
     pass
 
 
+class CreatePaymentError(Exception):
+    pass
+
+
 class WBAuthorizedError(Exception):
     """Ошибка авторизации в личном кабинете WB"""
     def __init__(self, message: str):

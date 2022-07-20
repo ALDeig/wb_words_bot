@@ -22,6 +22,8 @@ class TgBot:
 class Miscellaneous:
     # other_params: str = None
     # token: str = None
+    terminal_key: str = None
+    terminal_password: str = None
     get_token_video_id: str = None
 
 
@@ -49,7 +51,9 @@ def load_config(path: str = None):
             database=env.str('DB_NAME')
         ),
         misc=Miscellaneous(
-            get_token_video_id=env.str("GET_TOKEN_VIDEO_ID")
+            get_token_video_id=env.str("GET_TOKEN_VIDEO_ID"),
+            terminal_key=env.str("TERMINAL_KEY"),
+            terminal_password=env.str("TERMINAL_PASSWORD")
             # wb_api_salt=env.str("WB_API_SALT")
         )
     )

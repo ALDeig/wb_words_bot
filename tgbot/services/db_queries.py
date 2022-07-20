@@ -65,7 +65,7 @@ class QueryDB:
         await self.session.commit()
         return new_authorization
 
-    async def update_proxy(self, username: str, password: str, ip_address: str, port: str):
+    async def update_proxy(self, username: str, password: str, ip_address: str, port: int):
         await self.session.execute(sa.delete(Proxy))
         new_proxy = Proxy(username=username, password=password, ip_address=ip_address, port=port)
         self.session.add(new_proxy)

@@ -13,3 +13,4 @@ fake-useragent
 APSCheduler==3.9.1
 pydantic==1.9.1
 # psycopg2
+pytz~=2021.3
