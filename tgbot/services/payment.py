@@ -107,8 +107,9 @@ async def check_payment_process(user_id: int, db: AsyncSession, bot: Bot, paymen
             case Status.CONFIRMED:
                 subscribe = date.today() + timedelta(days=payment.period)
                 await QueryDB(db).add_user(user_id, subscribe)
-                await bot.send_message(user_id, f"Оплата прошла успешно. Ваша подписка активна до {subscribe}",
-                                       reply_markup=start_menu())
+                await bot.send_message(user_id, f"Оплата прошла успешно. Ваша подписка активна до {subscribe}")
+                await bot.send_message(user_id, "https://t.me/robo_wb/573 - инструкция")
+                await bot.send_message(user_id, "Выберите команду", reply_markup=start_menu())
                 return
             case Status.DEADLINE_EXPIRED:
                 await bot.send_message(user_id, "Истекло время оплаты. Чтобы начать заново нажмите /start")

@@ -120,9 +120,14 @@ async def send_excel_file(msg: Message, state: FSMContext):
 
 async def send_help(msg: Message, state: FSMContext):
     await state.finish()
+    config = msg.bot.get("config")
+    video_id = config.misc.help_video_id
     await msg.answer(texts.TEXTS["help"])
-    file = InputFile("help.mp4")
-    await msg.answer_document(file)
+
+    # file = InputFile("help.mp4")
+    # send = await msg.answer_document(file)
+    await msg.answer_video(video_id)
+    # print(send)
 
 
 async def btn_info_by_scu(call: CallbackQuery, state: FSMContext):
