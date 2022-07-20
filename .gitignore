@@ -52,6 +52,9 @@ __pypackages__/
 
 # Environments
 .venv
+.env
+alembic.ini
+help.mp4
 env/
 venv/
 ENV/
