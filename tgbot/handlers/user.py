@@ -126,9 +126,9 @@ async def send_excel_file(msg: Message, state: FSMContext):
     excel.save_file_with_words_by_scu(f"{msg.from_user.id}.xlsx", query_info.result)
     file = InputFile(f"{msg.from_user.id}.xlsx")
     await msg.answer_document(file, caption=f"Всего слов - {len(query_info.result)}")
+    await msg.answer("Выбери команду", reply_markup=inline.start_menu())
     await asyncio.sleep(10)
     Path(f"{msg.from_user.id}.xlsx").unlink()
-    await msg.answer("Выбери команду", reply_markup=inline.start_menu())
 
 
 async def send_help(msg: Message, state: FSMContext):
@@ -193,13 +193,13 @@ async def get_scu(msg: Message, state: FSMContext):
     await msg.answer_document(file_words, caption=f"Всего слов - {len(scu_info.words)}")
     await msg.answer_document(file_requests, caption=f"Всего запросов - {len(scu_info.requests)}")
     await msg.answer_document(file_sales)
+    await msg.answer("Выбери команду", reply_markup=inline.start_menu())
     await asyncio.sleep(5)
     Path(f"{scu}_words.xlsx").unlink()
     Path(f"{scu}_requests.xlsx").unlink()
     Path(f"{scu}_sales.xlsx").unlink()
     # categories.unlink()
     scu_info.image.unlink()
-    await msg.answer("Выбери команду", reply_markup=inline.start_menu())
 
 
 async def btn_change_name(call: CallbackQuery, state: FSMContext):
