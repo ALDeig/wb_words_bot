@@ -194,12 +194,10 @@ class InfoByScu:
         # print(raw_sales_data.text)
         # with open("sales_info.json", "w") as file:
         #     json.dump(raw_sales_data.json(), file, indent=4, ensure_ascii=False)
-        if raw_sales_data.json().get("code") == 401:
-            raise ErrorAuthenticationMPStats
         try:
             sales = [Sales.parse_obj(day) for day in raw_sales_data.json()]
         except (json.JSONDecodeError, ValidationError):
-            raise ErrorBadRequestMPStats
+            raise ErrorAuthenticationMPStats
         self.scu_info.price, self.scu_info.amount_sales, self.scu_info.total_sales = \
             self._parse_sales_info_by_scu(sales)
         self.sales = self._parse_info_for_file_with_sales(sales)
