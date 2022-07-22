@@ -10,7 +10,13 @@ from aiogram.types import Message, CallbackQuery, InputFile
 from ..keyboards import inline
 from ..services import wildberries, mpstats, excel, texts
 from ..services.db_queries import QueryDB
-from ..services.errors import WBAuthorizedError, WBUpdateNameError, CreatePaymentError
+from ..services.errors import (
+    WBAuthorizedError,
+    WBUpdateNameError,
+    CreatePaymentError,
+    ErrorAuthenticationMPStats,
+    ErrorBadRequestMPStats
+)
 from ..services.payment import Payment, check_payment_process
 
 
@@ -28,25 +34,25 @@ async def btn_subscribe(call: CallbackQuery, state: FSMContext):
     await call.answer()
     config = call.bot.get("config")
     period = "день" if call.data == "day" else "месяц"
-    payment = Payment(
-        price=500 if call.data == "day" else 1900,
-        description=f"Один {period} подписки на SEO-бота",
-        order_id=f"{uuid.uuid4()}",
-        period=1 if call.data == "day" else 30,
-        terminal_key=config.misc.terminal_key,
-        terminal_password=config.misc.terminal_password
-    )
-    try:
-        payment_url = await payment.create_payment()
-    except CreatePaymentError:
-        await call.message.answer("Не удалось создать платеж. По пробуйте позже или обратитесь к администратору.")
-        await state.finish()
-        return
-    await call.message.answer(f"Вы выбрали 1 {period} подписки. Для перехода к окну оплаты, нажмите \"Оплатить\"."
-                              f"После оплаты вернитесь в бота и нажмите \"Оплатил\"",
-                              reply_markup=inline.pay(payment_url))
-    await state.update_data(payment=payment)
-    # await call.message.answer(texts.TEXTS["subscribe"], reply_markup=inline.paid(payment_url))
+    # payment = Payment(
+    #     price=500 if call.data == "day" else 1900,
+    #     description=f"Один {period} подписки на SEO-бота",
+    #     order_id=f"{uuid.uuid4()}",
+    #     period=1 if call.data == "day" else 30,
+    #     terminal_key=config.misc.terminal_key,
+    #     terminal_password=config.misc.terminal_password
+    # )
+    # try:
+    #     payment_url = await payment.create_payment()
+    # except CreatePaymentError:
+    #     await call.message.answer("Не удалось создать платеж. По пробуйте позже или обратитесь к администратору.")
+    #     await state.finish()
+    #     return
+    # await call.message.answer(f"Вы выбрали 1 {period} подписки. Для перехода к окну оплаты, нажмите \"Оплатить\"."
+    #                           f"После оплаты вернитесь в бота и нажмите \"Оплатил\"",
+    #                           reply_markup=inline.pay(payment_url))
+    # await state.update_data(payment=payment)
+    await call.message.answer(texts.TEXTS["subscribe"], reply_markup=inline.paid())
     # await call.message.answer("После оплаты доступ автоматически откроется")
     # await check_payment_process(
     #     user_id=call.from_user.id,
@@ -54,8 +60,8 @@ async def btn_subscribe(call: CallbackQuery, state: FSMContext):
     #     bot=call.bot,
     #     payment=payment
     # )
-    await state.set_state("paid")
-    # await state.finish()
+    # await state.set_state("paid")
+    await state.finish()
 
 
 async def btn_paid(call: CallbackQuery, state: FSMContext):
@@ -103,7 +109,14 @@ async def send_excel_file(msg: Message, state: FSMContext):
     await msg.answer("Это займет некоторое время...")
     auth, proxy = await QueryDB(msg.bot.get("db")).get_authorization()
     query_info = mpstats.InfoByQuery(msg.text, auth.token, proxy)
-    await query_info.start_process()
+    try:
+        await query_info.start_process()
+    except ErrorAuthenticationMPStats:
+        await msg.answer(texts.TEXTS["error"])
+        config = msg.bot.get("config")
+        for admin in config.tg_bot.admin_ids:
+            await msg.bot.send_message(admin, "Ошибка авторизации в MPStats")
+        return
     # data_for_excel = mpstats.get_keywords_by_search_query(msg.text, auth.token, proxy)
     # if not data_for_excel:
     #     await msg.answer(texts.TEXTS["error"])
@@ -151,6 +164,12 @@ async def get_scu(msg: Message, state: FSMContext):
     try:
         scu_info = mpstats.InfoByScu(scu, auth.token)
         await scu_info.get_info_by_scu()
+    except ErrorAuthenticationMPStats:
+        await msg.answer(texts.TEXTS["error"])
+        config = msg.bot.get("config")
+        for admin in config.tg_bot.admin_ids:
+            await msg.bot.send_message(admin, "Ошибка авторизации в MPStats")
+        return
     except Exception as er:
         print(er)
         await msg.answer(texts.TEXTS["error"])
@@ -239,7 +258,7 @@ async def get_wb_api_key(msg: Message, state: FSMContext):
 def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, commands=["start"], state="*")
     dp.register_callback_query_handler(btn_subscribe, lambda call: call.data == "day" or call.data == "month")
-    dp.register_callback_query_handler(btn_paid, lambda call: call.data == "paid", state="paid")
+    dp.register_callback_query_handler(btn_paid, lambda call: call.data == "paid")  # , state="paid")
     dp.register_callback_query_handler(btn_get_suggest, lambda call: call.data == "suggest", is_subscribe=True)
     dp.register_message_handler(send_suggest_query, state="query_for_suggest")
     dp.register_callback_query_handler(btn_excel_file, lambda call: call.data == "excel", is_subscribe=True)

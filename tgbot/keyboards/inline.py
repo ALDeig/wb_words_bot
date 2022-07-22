@@ -28,11 +28,11 @@ def subscribe():
     return kb
 
 
-# def paid():
-#     kb = InlineKeyboardMarkup(row_width=1).add(
-#         InlineKeyboardButton(text="Оплатил(а)", callback_data="paid")
-#     )
-#     return kb
+def paid():
+    kb = InlineKeyboardMarkup(row_width=1).add(
+        InlineKeyboardButton(text="Оплатил(а)", callback_data="paid")
+    )
+    return kb
 
 
 def pay(payment_url: str):

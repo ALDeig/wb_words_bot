@@ -1,6 +1,7 @@
 import asyncio
 import json
 from collections import namedtuple
+from contextlib import redirect_stderr
 from dataclasses import dataclass
 from datetime import date, timedelta
 import logging
@@ -130,6 +131,9 @@ class InfoByQuery:
                 "type": type_request
             }
         )
+        response_json = response.json()
+        if response_json.get("code") == 401:
+            raise ErrorAuthenticationMPStats
         return response.json()["result"]
 
     @staticmethod
@@ -190,6 +194,8 @@ class InfoByScu:
         # print(raw_sales_data.text)
         # with open("sales_info.json", "w") as file:
         #     json.dump(raw_sales_data.json(), file, indent=4, ensure_ascii=False)
+        if raw_sales_data.json().get("code") == 401:
+            raise ErrorAuthenticationMPStats
         try:
             sales = [Sales.parse_obj(day) for day in raw_sales_data.json()]
         except (json.JSONDecodeError, ValidationError):
