@@ -20,11 +20,12 @@ class TgBot:
 
 @dataclass
 class Miscellaneous:
+    qiwi_token: str = None
     # other_params: str = None
     # token: str = None
     help_video_id: str = None
-    terminal_key: str = None
-    terminal_password: str = None
+    # terminal_key: str = None
+    # terminal_password: str = None
     get_token_video_id: str = None
 
 
@@ -54,8 +55,9 @@ def load_config(path: str = None):
         misc=Miscellaneous(
             get_token_video_id=env.str("GET_TOKEN_VIDEO_ID"),
             help_video_id=env.str("HELP_VIDEO_ID"),
-            terminal_key=env.str("TERMINAL_KEY"),
-            terminal_password=env.str("TERMINAL_PASSWORD")
+            qiwi_token=env.str("QIWI_TOKEN")
+            # terminal_key=env.str("TERMINAL_KEY"),
+            # terminal_password=env.str("TERMINAL_PASSWORD")
             # wb_api_salt=env.str("WB_API_SALT")
         )
     )

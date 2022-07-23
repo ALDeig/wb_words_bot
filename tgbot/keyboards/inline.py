@@ -6,7 +6,7 @@ def start_menu():
         InlineKeyboardButton(text="Поисковые запросы", callback_data="suggest"),
         InlineKeyboardButton(text="Сбор SEO ядра", callback_data="excel"),
         InlineKeyboardButton(text="Анализ конкурента", callback_data="info"),
-        InlineKeyboardButton(text="Изменить название карточки", callback_data="change_name")
+        # InlineKeyboardButton(text="Изменить название карточки", callback_data="change_name")
     )
     return kb
 
@@ -38,6 +38,6 @@ def paid():
 def pay(payment_url: str):
     kb = InlineKeyboardMarkup(row_width=1).add(
         InlineKeyboardButton(text="Оплатить", url=payment_url),
-        InlineKeyboardButton(text="Оплатил", callback_data="paid")
+        # InlineKeyboardButton(text="Оплатил", callback_data="paid")
     )
     return kb

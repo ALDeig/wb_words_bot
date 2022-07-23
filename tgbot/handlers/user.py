@@ -17,7 +17,8 @@ from ..services.errors import (
     ErrorAuthenticationMPStats,
     ErrorBadRequestMPStats
 )
-from ..services.payment import Payment, check_payment_process
+# from ..services.payment_tinkoff import Payment, check_payment_process
+from ..services.payment import check_payment_process
 
 
 async def user_start(msg: Message, state: FSMContext):
@@ -30,48 +31,48 @@ async def user_start(msg: Message, state: FSMContext):
     await msg.answer("Выбери команду", reply_markup=inline.start_menu())
 
 
-async def btn_subscribe(call: CallbackQuery, state: FSMContext):
-    await call.answer()
-    config = call.bot.get("config")
-    period = "день" if call.data == "day" else "месяц"
-    # payment = Payment(
-    #     price=500 if call.data == "day" else 1900,
-    #     description=f"Один {period} подписки на SEO-бота",
-    #     order_id=f"{uuid.uuid4()}",
-    #     period=1 if call.data == "day" else 30,
-    #     terminal_key=config.misc.terminal_key,
-    #     terminal_password=config.misc.terminal_password
-    # )
-    # try:
-    #     payment_url = await payment.create_payment()
-    # except CreatePaymentError:
-    #     await call.message.answer("Не удалось создать платеж. По пробуйте позже или обратитесь к администратору.")
-    #     await state.finish()
-    #     return
-    # await call.message.answer(f"Вы выбрали 1 {period} подписки. Для перехода к окну оплаты, нажмите \"Оплатить\"."
-    #                           f"После оплаты вернитесь в бота и нажмите \"Оплатил\"",
-    #                           reply_markup=inline.pay(payment_url))
-    # await state.update_data(payment=payment)
-    await call.message.answer(texts.TEXTS["subscribe"], reply_markup=inline.paid())
-    # await call.message.answer("После оплаты доступ автоматически откроется")
-    # await check_payment_process(
-    #     user_id=call.from_user.id,
-    #     db=call.bot.get("db"),
-    #     bot=call.bot,
-    #     payment=payment
-    # )
-    # await state.set_state("paid")
-    await state.finish()
+# async def btn_subscribe(call: CallbackQuery, state: FSMContext):
+#     await call.answer()
+#     config = call.bot.get("config")
+#     period = "день" if call.data == "day" else "месяц"
+#     # payment = Payment(
+#     #     price=500 if call.data == "day" else 1900,
+#     #     description=f"Один {period} подписки на SEO-бота",
+#     #     order_id=f"{uuid.uuid4()}",
+#     #     period=1 if call.data == "day" else 30,
+#     #     terminal_key=config.misc.terminal_key,
+#     #     terminal_password=config.misc.terminal_password
+#     # )
+#     # try:
+#     #     payment_url = await payment.create_payment()
+#     # except CreatePaymentError:
+#     #     await call.message.answer("Не удалось создать платеж. По пробуйте позже или обратитесь к администратору.")
+#     #     await state.finish()
+#     #     return
+#     # await call.message.answer(f"Вы выбрали 1 {period} подписки. Для перехода к окну оплаты, нажмите \"Оплатить\"."
+#     #                           f"После оплаты вернитесь в бота и нажмите \"Оплатил\"",
+#     #                           reply_markup=inline.pay(payment_url))
+#     # await state.update_data(payment=payment)
+#     await call.message.answer(texts.TEXTS["subscribe"], reply_markup=inline.paid())
+#     # await call.message.answer("После оплаты доступ автоматически откроется")
+#     # await check_payment_process(
+#     #     user_id=call.from_user.id,
+#     #     db=call.bot.get("db"),
+#     #     bot=call.bot,
+#     #     payment=payment
+#     # )
+#     # await state.set_state("paid")
+#     await state.finish()
 
 
-async def btn_paid(call: CallbackQuery, state: FSMContext):
-    await call.answer()
-    data = await state.get_data()
-    payment = data.get("payment")
-    await call.message.edit_text("Оплата проверяется")
-    # await call.message.edit_reply_markup()
-    await check_payment_process(call.from_user.id, call.bot.get("db"), call.bot, payment)
-    await state.finish()
+# async def btn_paid(call: CallbackQuery, state: FSMContext):
+#     await call.answer()
+#     data = await state.get_data()
+#     payment = data.get("payment")
+#     await call.message.edit_text("Оплата проверяется")
+#     # await call.message.edit_reply_markup()
+#     await check_payment_process(call.from_user.id, call.bot.get("db"), call.bot, payment)
+#     await state.finish()
     # await call.message.edit_reply_markup()
     # await call.message.answer(texts.TEXTS["paid"])
 
@@ -257,8 +258,8 @@ async def get_wb_api_key(msg: Message, state: FSMContext):
 
 def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, commands=["start"], state="*")
-    dp.register_callback_query_handler(btn_subscribe, lambda call: call.data == "day" or call.data == "month")
-    dp.register_callback_query_handler(btn_paid, lambda call: call.data == "paid")  # , state="paid")
+    # dp.register_callback_query_handler(btn_subscribe, lambda call: call.data == "day" or call.data == "month")
+    # dp.register_callback_query_handler(btn_paid, lambda call: call.data == "paid")  # , state="paid")
     dp.register_callback_query_handler(btn_get_suggest, lambda call: call.data == "suggest", is_subscribe=True)
     dp.register_message_handler(send_suggest_query, state="query_for_suggest")
     dp.register_callback_query_handler(btn_excel_file, lambda call: call.data == "excel", is_subscribe=True)
